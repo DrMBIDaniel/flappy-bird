@@ -1,31 +1,226 @@
 <!doctype html>
-<html lang="ru"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#70c5ce"><title>Flappy Bird</title>
-<style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:system-ui,sans-serif;background:#70c5ce;overflow:hidden}
-body{display:flex;align-items:center;justify-content:center;padding:10px}.wrap{width:min(100%,430px);display:flex;flex-direction:column;align-items:center;gap:10px}
-.top{width:100%;display:flex;justify-content:space-between;font-weight:800;color:#173a42}.game{position:relative;width:100%;aspect-ratio:360/560;max-height:calc(100dvh - 90px);border:3px solid #24565b;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px #17454a30;touch-action:manipulation}
-canvas{width:100%;height:100%;display:block;touch-action:manipulation}.hint{font-size:13px;color:#173a42}
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#183e4526}.panel{margin:20px;background:#fff8d8;border:3px solid #7a5921;border-radius:18px;padding:22px 18px;text-align:center;box-shadow:0 5px 0 #7a5921;max-width:290px;color:#3c321b}
-.panel h1{font-size:28px;margin:0 0 8px}.panel p{line-height:1.4}button{border:0;border-radius:999px;background:#ffcc3e;color:#503a00;font-weight:900;font-size:16px;padding:11px 22px;box-shadow:0 3px 0 #d79c14}.hidden{display:none}
-</style></head><body><div class="wrap">
-<div class="top"><span>🐤 Flappy Bird</span><span id="best">Рекорд: 0</span></div>
-<div class="game"><canvas id="c" width="360" height="560"></canvas><div class="overlay" id="overlay"><div class="panel"><h1>Flappy Bird</h1><p>Нажимай на экран или пробел, чтобы лететь между трубами!</p><button id="start">Играть</button></div></div></div>
-<div class="hint">📱 Касание экрана · 💻 Пробел или клик</div></div>
-<script>
-(()=>{const c=document.getElementById('c'),x=c.getContext('2d'),ov=document.getElementById('overlay'),btn=document.getElementById('start'),bestEl=document.getElementById('best');const W=360,H=560,G=505;let bird={x:92,y:245,v:0},pipes=[],score=0,best=0,mode='ready',frame=0,groundMove=0;
-try{best=+(localStorage.getItem('flappyBest')||0)}catch(e){}bestEl.textContent='Рекорд: '+best;
-function addPipe(px){pipes.push({x:px,top:65+Math.random()*225,gap:150,passed:false})}
-function reset(){bird.y=245;bird.v=0;pipes=[];score=0;frame=0;for(let px=250;px<850;px+=190)addPipe(px);mode='playing';ov.classList.add('hidden')}
-function flap(){if(mode!=='playing'){reset()}bird.v=-5.7}
-function act(){if(mode==='over'){reset()}flap()}
-btn.onclick=e=>{e.stopPropagation();reset();flap()};c.addEventListener('pointerdown',e=>{e.preventDefault();act()});window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();act()}});
-function bg(){x.fillStyle='#70c5ce';x.fillRect(0,0,W,H);x.fillStyle='#ffffff9c';for(let i=0;i<4;i++){let px=((i*115-frame*.22)%470+470)%470-50,py=70+(i%3)*58;x.beginPath();x.arc(px,py,17,0,7);x.arc(px+20,py-8,22,0,7);x.arc(px+43,py,16,0,7);x.fill()}x.fillStyle='#a9df75';x.beginPath();x.moveTo(0,430);for(let px=0;px<=W;px+=30)x.lineTo(px,420+Math.sin((px+frame*.35)/40)*17);x.lineTo(W,G);x.lineTo(0,G);x.fill()}
-function pipe(p){let b=p.top+p.gap;x.fillStyle='#5ac445';x.strokeStyle='#287b2c';x.lineWidth=3;x.fillRect(p.x,0,48,p.top-17);x.strokeRect(p.x,0,48,p.top-17);x.fillRect(p.x-5,p.top-22,58,22);x.strokeRect(p.x-5,p.top-22,58,22);x.fillRect(p.x,b+17,48,G-b-17);x.strokeRect(p.x,b+17,48,G-b-17);x.fillRect(p.x-5,b,58,22);x.strokeRect(p.x-5,b,58,22);x.fillStyle='#8be86b';x.fillRect(p.x+7,0,7,p.top-20);x.fillRect(p.x+7,b+20,7,G-b-20)}
-function drawBird(){x.save();x.translate(bird.x,bird.y);x.rotate(Math.min(.9,Math.max(-.55,bird.v*.09)));x.fillStyle='#ffcf35';x.strokeStyle='#8e6420';x.lineWidth=2;x.beginPath();x.ellipse(0,0,15,12,0,0,7);x.fill();x.stroke();x.fillStyle='#f6a623';x.beginPath();x.ellipse(-5,4,8,5,-.25,0,7);x.fill();x.stroke();x.fillStyle='white';x.beginPath();x.arc(7,-5,5,0,7);x.fill();x.stroke();x.fillStyle='#222';x.beginPath();x.arc(9,-5,2,0,7);x.fill();x.fillStyle='#f27b28';x.beginPath();x.moveTo(12,0);x.lineTo(23,3);x.lineTo(12,6);x.closePath();x.fill();x.stroke();x.restore()}
-function ground(){x.fillStyle='#ded895';x.fillRect(0,G,W,H-G);x.fillStyle='#77c744';x.fillRect(0,G,W,12);x.fillStyle='#b7a76b';for(let px=-20+groundMove%28;px<W;px+=28){x.fillRect(px,G+20,13,4);x.fillRect(px+8,G+38,12,4)}}
-function over(){mode='over';if(score>best){best=score;bestEl.textContent='Рекорд: '+best;try{localStorage.setItem('flappyBest',best)}catch(e){}}ov.classList.remove('hidden');ov.querySelector('h1').textContent='Игра окончена!';ov.querySelector('p').innerHTML='Счёт: <b>'+score+'</b><br>Попробуем ещё?';btn.textContent='Ещё раз'}
-function tick(){frame++;bg();if(mode==='playing'){bird.v+=.29;bird.y+=bird.v;groundMove+=3;for(const p of pipes){p.x-=2.35;if(!p.passed&&p.x+48<bird.x){p.passed=true;score++}let b=p.top+p.gap;if(bird.x+10>p.x-4&&bird.x-10<p.x+52&&(bird.y-10<p.top||bird.y+10>b))over()}pipes=pipes.filter(p=>p.x>-65);if(!pipes.length||pipes[pipes.length-1].x<205)addPipe(W+10);if(bird.y+13>G||bird.y-13<0)over()}pipes.forEach(pipe);ground();drawBird();if(mode==='playing'){x.font='bold 42px system-ui';x.textAlign='center';x.lineWidth=4;x.strokeStyle='#654b20';x.strokeText(score,W/2,60);x.fillStyle='white';x.fillText(score,W/2,60)}requestAnimationFrame(tick)}
-for(let px=250;px<850;px+=190)addPipe(px);tick()})();
-</script></body></html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#70c5ce">
+  <title>Daniel Goofy Games — Flappy Bird</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;min-height:100%;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#70c5ce}
+    body{display:flex;align-items:center;justify-content:center;padding:12px;min-height:100dvh}
+    .wrap{width:min(100%,430px);display:flex;flex-direction:column;align-items:center;gap:10px}
+    .brand{width:100%;text-align:center;color:#173a42;font-weight:1000;font-size:clamp(22px,6vw,30px);letter-spacing:.3px;text-shadow:0 2px 0 #ffffff80}
+    .top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;color:#173a42;font-weight:800}
+    .game{position:relative;width:100%;aspect-ratio:360/560;max-height:calc(100dvh - 155px);border:3px solid #24565b;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px #17454a30;touch-action:manipulation}
+    canvas{width:100%;height:100%;display:block;touch-action:manipulation}
+    .hint{font-size:13px;color:#173a42;text-align:center}
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#183e4526}
+    .panel{margin:20px;background:#fff8d8;border:3px solid #7a5921;border-radius:18px;padding:22px 18px;text-align:center;box-shadow:0 5px 0 #7a5921;max-width:300px;color:#3c321b}
+    .panel h1{font-size:26px;margin:0 0 8px;line-height:1.1}
+    .panel p{line-height:1.4;margin:10px 0 16px}
+    button{border:0;border-radius:999px;background:#ffcc3e;color:#503a00;font-weight:900;font-size:15px;padding:10px 15px;box-shadow:0 3px 0 #d79c14;cursor:pointer}
+    button:active{transform:translateY(2px);box-shadow:0 1px 0 #d79c14}
+    .sound{background:#fff8d8;box-shadow:0 2px 0 #b4a66d;padding:8px 12px;font-size:13px;white-space:nowrap}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand">🎮 Daniel Goofy Games</div>
+    <div class="top">
+      <span>🐤 Flappy Bird</span>
+      <span id="best">Рекорд: 0</span>
+      <button id="soundToggle" class="sound" type="button" aria-pressed="true">🔊 Музыка: Вкл.</button>
+    </div>
+    <div class="game">
+      <canvas id="c" width="360" height="560" aria-label="Игра Flappy Bird"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="panel">
+          <h1 id="panelTitle">Daniel Goofy Games</h1>
+          <p id="panelText">Трубы — это желание прокрастинировать, а point — это бонусные баллы.</p>
+          <button id="start" type="button">Играть</button>
+        </div>
+      </div>
+    </div>
+    <div class="hint">📱 Касание экрана · 💻 Пробел или клик</div>
+  </main>
+
+  <!-- Загрузи свои треки в папку music в GitHub и назови их song1.mp3, song2.mp3, song3.mp3 -->
+  <audio id="backgroundMusic" preload="auto"></audio>
+
+  <script>
+  (() => {
+    // Музыка будет играть по очереди: 1 → 2 → 3 → снова 1.
+    const songs = [
+      'music/song1.mp3',
+      'music/song2.mp3',
+      'music/song3.mp3'
+    ];
+
+    const musicPlayer = document.getElementById('backgroundMusic');
+    const soundToggle = document.getElementById('soundToggle');
+    let currentSong = 0;
+    let musicEnabled = true;
+    let musicStarted = false;
+
+    function updateSoundButton() {
+      soundToggle.textContent = musicEnabled ? '🔊 Музыка: Вкл.' : '🔇 Музыка: Выкл.';
+      soundToggle.setAttribute('aria-pressed', String(musicEnabled));
+    }
+
+    function playSong(index) {
+      currentSong = index;
+      musicPlayer.src = songs[currentSong];
+      if (musicEnabled) {
+        musicPlayer.play().catch(() => {
+          // Некоторые браузеры разрешают звук только после нажатия пользователя.
+        });
+      }
+    }
+
+    function startMusic() {
+      if (!musicStarted) {
+        musicStarted = true;
+        playSong(0);
+      } else if (musicEnabled && musicPlayer.paused) {
+        musicPlayer.play().catch(() => {});
+      }
+    }
+
+    musicPlayer.addEventListener('ended', () => {
+      if (musicEnabled) playSong((currentSong + 1) % songs.length);
+    });
+
+    soundToggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      musicEnabled = !musicEnabled;
+      updateSoundButton();
+      if (!musicEnabled) {
+        musicPlayer.pause();
+      } else {
+        startMusic();
+      }
+    });
+    updateSoundButton();
+
+    const c = document.getElementById('c');
+    const x = c.getContext('2d');
+    const ov = document.getElementById('overlay');
+    const btn = document.getElementById('start');
+    const bestEl = document.getElementById('best');
+    const panelTitle = document.getElementById('panelTitle');
+    const panelText = document.getElementById('panelText');
+    const W = 360, H = 560, G = 505;
+    let bird = {x:92, y:245, v:0}, pipes = [], score = 0, best = 0;
+    let mode = 'ready', frame = 0, groundMove = 0;
+
+    try { best = +(localStorage.getItem('flappyBest') || 0); } catch(e) {}
+    bestEl.textContent = 'Рекорд: ' + best;
+
+    function addPipe(px) {
+      pipes.push({x:px, top:65 + Math.random()*225, gap:150, passed:false});
+    }
+    function reset() {
+      bird.y = 245; bird.v = 0; pipes = []; score = 0; frame = 0;
+      for (let px=250; px<850; px+=190) addPipe(px);
+      mode = 'playing';
+      ov.classList.add('hidden');
+    }
+    function flap() {
+      if (mode !== 'playing') reset();
+      bird.v = -5.7;
+    }
+    function act() {
+      startMusic();
+      if (mode === 'over') reset();
+      flap();
+    }
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startMusic();
+      if (mode === 'over') reset();
+      flap();
+    });
+    c.addEventListener('pointerdown', (e) => { e.preventDefault(); act(); });
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        act();
+      }
+    });
+
+    function bg() {
+      x.fillStyle = '#70c5ce'; x.fillRect(0,0,W,H);
+      x.fillStyle = '#ffffff9c';
+      for (let i=0;i<4;i++) {
+        let px = ((i*115-frame*.22)%470+470)%470-50, py = 70+(i%3)*58;
+        x.beginPath(); x.arc(px,py,17,0,7); x.arc(px+20,py-8,22,0,7); x.arc(px+43,py,16,0,7); x.fill();
+      }
+      x.fillStyle = '#a9df75'; x.beginPath(); x.moveTo(0,430);
+      for (let px=0;px<=W;px+=30) x.lineTo(px,420+Math.sin((px+frame*.35)/40)*17);
+      x.lineTo(W,G); x.lineTo(0,G); x.fill();
+    }
+    function pipe(p) {
+      let b = p.top+p.gap;
+      x.fillStyle = '#5ac445'; x.strokeStyle = '#287b2c'; x.lineWidth = 3;
+      x.fillRect(p.x,0,48,p.top-17); x.strokeRect(p.x,0,48,p.top-17);
+      x.fillRect(p.x-5,p.top-22,58,22); x.strokeRect(p.x-5,p.top-22,58,22);
+      x.fillRect(p.x,b+17,48,G-b-17); x.strokeRect(p.x,b+17,48,G-b-17);
+      x.fillRect(p.x-5,b,58,22); x.strokeRect(p.x-5,b,58,22);
+      x.fillStyle = '#8be86b'; x.fillRect(p.x+7,0,7,p.top-20); x.fillRect(p.x+7,b+20,7,G-b-20);
+    }
+    function drawBird() {
+      x.save(); x.translate(bird.x,bird.y); x.rotate(Math.min(.9,Math.max(-.55,bird.v*.09)));
+      x.fillStyle = '#ffcf35'; x.strokeStyle = '#8e6420'; x.lineWidth = 2;
+      x.beginPath(); x.ellipse(0,0,15,12,0,0,7); x.fill(); x.stroke();
+      x.fillStyle = '#f6a623'; x.beginPath(); x.ellipse(-5,4,8,5,-.25,0,7); x.fill(); x.stroke();
+      x.fillStyle = 'white'; x.beginPath(); x.arc(7,-5,5,0,7); x.fill(); x.stroke();
+      x.fillStyle = '#222'; x.beginPath(); x.arc(9,-5,2,0,7); x.fill();
+      x.fillStyle = '#f27b28'; x.beginPath(); x.moveTo(12,0); x.lineTo(23,3); x.lineTo(12,6); x.closePath(); x.fill(); x.stroke();
+      x.restore();
+    }
+    function ground() {
+      x.fillStyle = '#ded895'; x.fillRect(0,G,W,H-G);
+      x.fillStyle = '#77c744'; x.fillRect(0,G,W,12);
+      x.fillStyle = '#b7a76b';
+      for (let px=-20+groundMove%28;px<W;px+=28) { x.fillRect(px,G+20,13,4); x.fillRect(px+8,G+38,12,4); }
+    }
+    function over() {
+      mode = 'over';
+      if (score > best) {
+        best = score; bestEl.textContent = 'Рекорд: ' + best;
+        try { localStorage.setItem('flappyBest', best); } catch(e) {}
+      }
+      ov.classList.remove('hidden');
+      panelTitle.textContent = 'Игра окончена!';
+      panelText.innerHTML = 'Счёт: <b>' + score + '</b><br>Попробуем ещё?';
+      btn.textContent = 'Ещё раз';
+    }
+    function tick() {
+      frame++; bg();
+      if (mode === 'playing') {
+        bird.v += .29; bird.y += bird.v; groundMove += 3;
+        for (const p of pipes) {
+          p.x -= 2.35;
+          if (!p.passed && p.x+48 < bird.x) { p.passed = true; score++; }
+          let b = p.top+p.gap;
+          if (bird.x+10>p.x-4 && bird.x-10<p.x+52 && (bird.y-10<p.top || bird.y+10>b)) over();
+        }
+        pipes = pipes.filter(p => p.x > -65);
+        if (!pipes.length || pipes[pipes.length-1].x < 205) addPipe(W+10);
+        if (bird.y+13>G || bird.y-13<0) over();
+      }
+      pipes.forEach(pipe); ground(); drawBird();
+      if (mode === 'playing') {
+        x.font = 'bold 42px system-ui'; x.textAlign = 'center'; x.lineWidth = 4; x.strokeStyle = '#654b20';
+        x.strokeText(score,W/2,60); x.fillStyle = 'white'; x.fillText(score,W/2,60);
+      }
+      requestAnimationFrame(tick);
+    }
+    for (let px=250;px<850;px+=190) addPipe(px);
+    tick();
+  })();
+  </script>
+</body>
+</html>
